@@ -10,7 +10,10 @@
     "db:start": "node scripts/db.mjs start",
     "db:stop": "node scripts/db.mjs stop",
     "test": "tsx --test tests/*.test.ts",
-    "test:uploads:http": "node scripts/check-upload-http.mjs"
+    "test:uploads:http": "node --conditions=react-server --import tsx scripts/check-upload-http.mjs",
+    "admin:add": "node scripts/admin-add.mjs",
+    "mail:flush": "node --conditions=react-server --import tsx scripts/mail-flush.ts",
+    "test:integration": "node --conditions=react-server --import tsx --test tests/integration/*.test.ts"
   },
   "type": "module",
   "private": true,
@@ -20,7 +23,8 @@
     "react": "^19.3.1",
     "react-dom": "^19.3.1",
     "server-only": "^0.0.1",
-    "sharp": "^0.35.5"
+    "sharp": "^0.35.5",
+    "stripe": "^23.1.0"
   },
   "devDependencies": {
     "@types/node": "^26.6.6",

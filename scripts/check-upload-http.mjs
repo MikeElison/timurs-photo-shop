@@ -1,13 +1,20 @@
-// Integration regression: run against npm run dev. Every request is deliberately
-// invalid, so this exercises real Next.js multipart limits without saving photos.
+// Integration regression: every upload is invalid, so no photos are saved.
 import assert from 'node:assert/strict';
+import { randomUUID } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
+import { db } from '../lib/db.ts';
+import { newToken, hashToken } from '../lib/security.ts';
 const require = createRequire(import.meta.url);
-// Use the installed framework's serializer rather than hand-writing its wire format.
 const { encodeReply } = require('next/dist/compiled/react-server-dom-turbopack/client.node');
 const base = 'http://127.0.0.1:3000';
-const admin = await fetch(`${base}/admin`);
+const email = `upload-regression-${randomUUID()}@example.invalid`;
+const token = newToken();
+const cookie = `timurs_admin=${token}`;
+try {
+await db.query('INSERT INTO administrators(email) VALUES($1)', [email]);
+await db.query("INSERT INTO admin_sessions(token_hash,email,expires_at) VALUES($1,$2,now()+interval '5 minutes')", [hashToken(token), email]);
+const admin = await fetch(`${base}/admin`, { headers: { Cookie: cookie } });
 assert.equal(admin.status, 200, 'Start npm run dev with LOCAL_CATALOG=1 first');
 assert.ok((await admin.text()).includes('Your photo collection'), 'The local catalogue must be ready');
 const manifest = JSON.parse(await readFile('.next/dev/server/server-reference-manifest.json', 'utf8'));
@@ -26,7 +33,7 @@ async function request(size) {
   form.set('description', 'Invalid request used only to verify upload limits.');
   form.set('photo', new Blob([new Uint8Array(size)]), 'invalid-regression-file.jpg');
   const response = await fetch(`${base}/admin`, {
-    method: 'POST', headers: { 'Next-Action': actionId, Origin: base }, body: await encodeReply([{ message: '' }, form]),
+    method: 'POST', headers: { 'Next-Action': actionId, Origin: base, Cookie: cookie }, body: await encodeReply([{ message: '' }, form]),
     signal: AbortSignal.timeout(30000),
   });
   return { status: response.status, body: await response.text() };
@@ -45,3 +52,5 @@ const oversizedBody = await request(21.5 * 1024 * 1024);
 assert.ok(oversizedBody.status >= 400);
 assert.ok(/Body exceeded|body.*limit|too large/i.test(oversizedBody.body), 'Oversized action body must be rejected before multipart truncation');
 console.log('PASS 21.5 MiB: rejected by the action body limit');
+
+} finally { await db.query('DELETE FROM administrators WHERE email=$1', [email]); await db.end(); }

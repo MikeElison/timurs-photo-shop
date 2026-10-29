@@ -31,3 +31,7 @@ Administration is deliberately development-only with loopback Host and same-orig
 ## Price suggestion workflow
 
 Administration offers an explicit suggestion button using Frankfurter daily reference rates. While a quote is loaded in an edit session, GBP edits update linked EUR/USD fields; editing a foreign field overrides it. Review and save confirms fixed prices. Opening the page or changes to future exchange rates do not reprice the catalogue. Failures preserve entered prices and allow manual entry. Source/date are displayed while editing; only final prices persist. Existing purchases must retain the original price, currency, and licence when purchasing is implemented.
+
+## Milestone 3 — local administrator sign-in and test purchases
+
+Implemented: allowlisted email-link admin sign-in with short-lived single-use links, expiring server sessions and logout; hosted Stripe test Checkout integration; server-side price/licence snapshots in order records; signed-webhook fulfilment with idempotent email enqueueing; private local email outbox; expiring purchase-access and original-download tokens. Administration and draft previews now require a valid session. No real payments, external emails, customer accounts, or deployment are enabled. Stripe end-to-end verification requires a configured test account and CLI webhook forwarding. See docs/test-purchases.md.

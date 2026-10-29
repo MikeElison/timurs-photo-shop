@@ -1,6 +1,8 @@
 # Timurs’s photography shop
 
-A local Next.js/TypeScript prototype with a gallery, photo-details pages, and simple photo administration backed by PostgreSQL. No payments, customer accounts, purchase emails, or deployment are connected.
+A local Next.js/TypeScript prototype with a gallery, photo-details pages, and simple photo administration backed by PostgreSQL. Administrator sign-in, Stripe test Checkout integration, order records, a private local purchase-email outbox, and secure original downloads are implemented. Stripe credentials are required to exercise a real test transaction. Customer accounts and deployment remain future work.
+
+See **[Local sign-in and test purchases](docs/test-purchases.md)** for the new milestone, first sign-in, and Stripe setup.
 
 ## Run on your Mac
 
@@ -36,7 +38,7 @@ Rates come from [Frankfurter](https://frankfurter.dev/) and are cached for up to
 5. Change **Visibility** to **Published**, then **Save changes**. Open the gallery to see it.
 6. Edit its text/prices or return it to **Draft** with the same form. Drafts are omitted from the gallery and public details pages.
 
-A labelled test illustration has been left as a draft on this Mac. It is not photography by Timurs. The original three sample illustrations remain clearly labelled in the gallery. Licence descriptions remain placeholders and purchasing stays disabled, including on uploaded photos.
+A labelled test illustration has been left as a draft on this Mac. It is not photography by Timurs. The original three sample illustrations remain clearly labelled in the gallery. Licence descriptions remain TEST placeholders. Test purchasing becomes available on published uploads only after configuring Stripe test keys and the webhook listener.
 
 ## Storage and local access
 
@@ -44,7 +46,7 @@ A labelled test illustration has been left as a draft on this Mac. It is not pho
 - `.local-data/photos/<id>/original` contains the exact uploaded original, outside `public/`.
 - The generated preview is a JPEG with a maximum dimension of 1600 pixels, embedded repeating watermark, and no original EXIF metadata. The resized preview must retain at least 180 pixels on its shortest side and 360 on its longest, so its watermark stays readable. Only previews have an HTTP handler.
 - `.local-data/`, `.env.local`, dependencies, and generated build files are ignored by Git. **Your GitHub push does not back up uploaded photos or the local database.** Retain your source photos separately. A managed storage/database backup plan comes before launch.
-- Administration works only in development with `LOCAL_CATALOG=1` and a loopback Host. Mutations require a matching Origin. It has no login yet: any browser on this computer can manage the local catalogue. Keep the app on loopback; do not expose it through a tunnel or LAN. Production-mode requests to `/admin` are rejected. Proper administrator authentication is a later milestone.
+- Administration works only after an allowlisted administrator signs in, in development with `LOCAL_CATALOG=1` and the configured loopback origin. Mutations require a matching Origin. See the sign-in guide above. Every mutation and draft preview rechecks the session; signed-out visitors cannot manage the catalogue.
 - Local filesystem storage is a development stand-in for private object storage. Do not deploy this local storage/database setup.
 
 Without `LOCAL_CATALOG=1`, the original sample gallery still works. If the local database is stopped, the gallery shows a clear notice and sample artwork, and administration shows startup instructions.
@@ -53,6 +55,7 @@ Without `LOCAL_CATALOG=1`, the original sample gallery still works. If the local
 
 ```sh
 npm test
+npm run test:integration
 npm run build
 npm run typecheck
 ```
@@ -67,7 +70,7 @@ npm run test:uploads:http
 
 This regression check sends deliberately invalid requests without saving photos. It verifies complete multipart parsing at 9, 11, and 20 MiB, rejection of a file one byte above 20 MiB, and enforcement of the 21 MiB action-body limit. The proxy buffers up to 22 MiB so it does not truncate valid action requests first.
 
-Manual checks: upload → draft → publish → open details → change currency/licence → edit prices → return to draft. Refresh to check persistence. Try an invalid file and a price such as `-1` or `12.345`. Check narrow layouts and keyboard navigation. Purchasing must stay disabled.
+Manual checks: upload → draft → publish → open details → change currency/licence → edit prices → return to draft. Refresh to check persistence. Try an invalid file and a price such as `-1` or `12.345`. Check narrow layouts and keyboard navigation. Sample artwork must stay unpurchasable. Uploaded photos require configured Stripe test credentials.
 
 A developer HTTP smoke check is available after uploading an illustration titled exactly `TEST UPLOAD — sample illustration` through administration:
 
