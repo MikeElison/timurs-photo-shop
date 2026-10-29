@@ -21,3 +21,9 @@ Local gallery and photo-details pages; labelled sample content and sample prices
 ## Decide before launch
 
 Real images and branding; file types/sizes; actual prices; final licence terms; applicable tax/consumer/privacy obligations; download policy; email and authentication providers; hosting budget and providers; backup/recovery; Timurs’s ownership of payment accounts. No need for credentials during milestone 1.
+
+## Milestone 2 — local photo administration
+
+Implemented locally: isolated PostgreSQL catalogue; JPEG/PNG upload (20 MiB, 50 MP limits); private original preservation; resized, permanently watermarked, metadata-stripped previews; draft/published state; editing metadata and explicit prices in all three currencies. Uploaded photo prices drive the gallery/details selector. Original sample illustrations remain labelled.
+
+Administration is deliberately development-only with loopback Host and same-origin mutation checks, not a production authentication system. The database uses a private Unix socket. Private filesystem storage stands in for future object storage. Payments, customers, accounts, emails, deployment, and deletion/replacement of originals remain outside this milestone. Actual licence terms are still pending. Git excludes all uploaded files and database data.
