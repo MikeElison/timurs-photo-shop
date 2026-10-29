@@ -1,0 +1,27 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import { applySuggestions, inputsFromPrices, parseQuote, suggestedPrice } from '../lib/pricing';
+import { prices } from '../lib/photos';
+const now = new Date('2026-10-29T12:00:00Z');
+const rows = [{ date: '2026-10-28', base: 'GBP', quote: 'EUR', rate: 1.17 }, { date: '2026-10-28', base: 'GBP', quote: 'USD', rate: 1.31 }];
+const quote = parseQuote(rows, now);
+test('validates dated GBP rates and rejects stale, future, malformed or incomplete responses', () => {
+  assert.equal(quote.date, '2026-10-28');
+  for (const data of [null, [], [rows[0]], [rows[0], rows[0]], rows.map(row => ({ ...row, rate: 0 })), rows.map(row => ({ ...row, base: 'EUR' })), rows.map(row => ({ ...row, date: '2026-10-01' })), rows.map(row => ({ ...row, date: '2026-10-30' }))]) assert.throws(() => parseQuote(data, now));
+});
+test('rounds suggested amounts to nearest 0.50 with minimum and maximum bounds', () => {
+  assert.equal(suggestedPrice('15.00', 1.17), '17.50');
+  assert.equal(suggestedPrice('15.00', 1.31), '19.50');
+  assert.equal(suggestedPrice('0.01', 1.17), '0.50');
+  for (const rate of [0, -1, Infinity, NaN]) assert.throws(() => suggestedPrice('15', rate));
+  assert.throws(() => suggestedPrice('999999.99', 1.31));
+});
+test('GBP edits update both licences while preserving manual overrides and original saved prices', () => {
+  const inputs = inputsFromPrices(prices);
+  const next = applySuggestions({ ...inputs, 'GBP-personal': '20', 'USD-personal': '29.99' }, quote, { 'USD-personal': true });
+  assert.equal(next['EUR-personal'], '23.50'); assert.equal(next['USD-personal'], '29.99');
+  assert.equal(next['EUR-commercial'], '76.00'); assert.equal(next['USD-commercial'], '85.00');
+  assert.equal(inputs['GBP-personal'], '15.00'); assert.equal(prices.GBP.personal, 1500);
+  const incomplete = applySuggestions({ ...inputs, 'GBP-personal': '' }, quote, {});
+  assert.equal(incomplete['EUR-personal'], inputs['EUR-personal']);
+});
