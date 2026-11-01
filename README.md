@@ -78,7 +78,7 @@ A developer HTTP smoke check is available after uploading an illustration titled
 node scripts/check-local-http.mjs
 ```
 
-It checks gallery/detail visibility, preview response headers, original URL protection, and non-local Host rejection. It also accepts a base URL argument for checking a production-mode server on port 3001, where administration and draft previews must return 404. Next.js can render not-found page content with HTTP 200 after streaming begins; the draft detail check also verifies that the actual photo content is absent.
+It checks every upload with that exact title, so duplicate test titles are allowed. It checks gallery/detail visibility, preview response headers, original URL protection, and non-local Host rejection. It also accepts a base URL argument for checking a production-mode server on port 3001, where administration and draft previews must return 404. Next.js can render not-found page content with HTTP 200 after streaming begins; the draft detail check also verifies that the actual photo content is absent.
 
 ## How the code fits together
 
